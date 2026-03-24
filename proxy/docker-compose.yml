@@ -1,136 +1,54 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+version: "3"
+
 services:
-  kafka:
-    image: confluentinc/cp-kafka:8.1.0
-    user: "0:0"
-    container_name: kafka
-    restart: unless-stopped
-    hostname: kafka
+  apisix:
+    image: apache/apisix:${APISIX_IMAGE_TAG:-3.15.0-debian}
+    restart: always
+    volumes:
+      - ./apisix_conf/apisix-standalone.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+      - ./apisix_conf/config-standalone.yaml:/usr/local/apisix/conf/config.yaml:ro
+    environment:
+      - APISIX_STAND_ALONE=true
     ports:
-      - "29092:29092"
-      - "7071:7071"
+      - "9180:9180/tcp"
+      - "9080:9080/tcp"
+      - "9091:9091/tcp"
+      - "9443:9443/tcp"
+      - "9092:9092/tcp"
+    networks:
+      apisix:
+
+  web1:
+    image: nginx:1.19.0-alpine
+    restart: always
     volumes:
-      - kafka-storage:/var/lib/kafka/data
-      - type: bind
-        source: ./config/kafka/jmx-exporter/jmx_exporter.yml
-        target: /etc/kafka/jmx_exporter.yml
-      - type: bind
-        source: ./config/kafka/jmx-exporter/jmx_prometheus_javaagent-0.18.0.jar
-        target: /usr/share/java/kafka/jmx_prometheus_javaagent-0.18.0.jar
-    environment:
-      KAFKA_BROKER_ID: 1
-      # PLAINTEXT is used by services inside the Docker network
-      # PLAINTEXT_HOST is used by external clients (e.g., Kafka SPI for Keycloak)
-      # PLAINTEXT_HOST must be resolvable from outside the Docker network (and ideally from outside the host VM)
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://${KAFKA_EXTERNAL_HOST}:29092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_NODE_ID: 1
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
-      KAFKA_LISTENERS: CONTROLLER://kafka:29093,PLAINTEXT://kafka:9092,PLAINTEXT_HOST://0.0.0.0:29092
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
-      KAFKA_OPTS: -javaagent:/usr/share/java/kafka/jmx_prometheus_javaagent-0.18.0.jar=7071:/etc/kafka/jmx_exporter.yml
-      CLUSTER_ID: YzY3YzJhZmU0MzAzNDA1N2
-  postgres:
-    image: stellio/stellio-timescale-postgis:16-2.24.0-3.6
-    container_name: postgres
-    restart: unless-stopped
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASS=${POSTGRES_PASS}
-      - POSTGRES_DBNAME=${POSTGRES_DBNAME}
-      - POSTGRES_MULTIPLE_EXTENSIONS=postgis,timescaledb,pgcrypto
-      - ACCEPT_TIMESCALE_TUNING=TRUE
-    volumes:
-      - postgres-storage:/var/lib/postgresql
-    healthcheck:
-      test: "PGPASSWORD=${POSTGRES_PASS} pg_isready -h 127.0.0.1 -U ${POSTGRES_USER} -d ${STELLIO_SEARCH_DB_DATABASE}"
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 10s
-    shm_size: 1g
-  api-gateway:
-    container_name: api-gateway
-    image: stellio/stellio-api-gateway:${STELLIO_DOCKER_TAG}
-    restart: unless-stopped
-    environment:
-      - APPLICATION_AUTHENTICATION_ENABLED=false
-      - "SPRING_PROFILES_ACTIVE=${ENVIRONMENT}"
-      - APPLICATION_GRAYLOG_HOST=${APPLICATION_GRAYLOG_HOST}
-      - APPLICATION_GRAYLOG_PORT=${APPLICATION_GRAYLOG_PORT}
-      - APPLICATION_GRAYLOG_SOURCE=${APPLICATION_GRAYLOG_SOURCE}
-      - APPLICATION_CORS_ALLOWED_ORIGINS=${APPLICATION_CORS_ALLOWED_ORIGINS}
+      - ./upstream/web1.conf:/etc/nginx/nginx.conf
     ports:
-      - 8080:8080
-  search-service:
-    container_name: search-service
-    image: stellio/stellio-search-service:${STELLIO_DOCKER_TAG}
-    restart: unless-stopped
-    volumes:
-      - type: bind
-        source: ./config/stellio/hosts
-        target: /etc/hosts
+      - "9081:80/tcp"
     environment:
-      - APPLICATION_AUTHENTICATION_ENABLED=false
-      - APPLICATION_TENANTS_0_ISSUER=${APPLICATION_TENANTS_0_ISSUER}
-      - APPLICATION_TENANTS_0_NAME=${APPLICATION_TENANTS_0_NAME}
-      - APPLICATION_TENANTS_0_DBSCHEMA=${APPLICATION_TENANTS_0_DBSCHEMA}
-      - SPRING_PROFILES_ACTIVE=${ENVIRONMENT}
-      - SPRING_R2DBC_URL=r2dbc:pool:postgresql://postgres/${STELLIO_SEARCH_DB_DATABASE}
-      - SPRING_FLYWAY_URL=jdbc:postgresql://postgres/${STELLIO_SEARCH_DB_DATABASE}
-      - SPRING_R2DBC_USERNAME=${POSTGRES_USER}
-      - SPRING_R2DBC_PASSWORD=${POSTGRES_PASS}
-      - APPLICATION_PAGINATION_LIMIT_MAX=${APPLICATION_PAGINATION_LIMIT_MAX}
-      - APPLICATION_GRAYLOG_HOST=${APPLICATION_GRAYLOG_HOST}
-      - APPLICATION_GRAYLOG_PORT=${APPLICATION_GRAYLOG_PORT}
-      - APPLICATION_GRAYLOG_SOURCE=${APPLICATION_GRAYLOG_SOURCE}
-      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=${MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED}
-      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE}
-      - MANAGEMENT_METRICS_TAGS_APPLICATION=${STELLIO_SEARCH_APP_NAME} - ${MANAGEMENT_METRICS_PF_TAG}
-      - SEARCH_PAYLOAD-MAX-BODY-SIZE=${SEARCH_PAYLOAD_MAX_BODY_SIZE}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_started
-  subscription-service:
-    container_name: subscription-service
-    image: stellio/stellio-subscription-service:${STELLIO_DOCKER_TAG}
-    restart: unless-stopped
-    volumes:
-      - type: bind
-        source: ./config/stellio/hosts
-        target: /etc/hosts
-    environment:
-      - APPLICATION_AUTHENTICATION_ENABLED=false
-      - APPLICATION_TENANTS_0_ISSUER=${APPLICATION_TENANTS_0_ISSUER}
-      - APPLICATION_TENANTS_0_NAME=${APPLICATION_TENANTS_0_NAME}
-      - APPLICATION_TENANTS_0_DBSCHEMA=${APPLICATION_TENANTS_0_DBSCHEMA}
-      - SPRING_PROFILES_ACTIVE=${ENVIRONMENT}
-      - SPRING_R2DBC_URL=r2dbc:pool:postgresql://postgres/${STELLIO_SUBSCRIPTION_DB_DATABASE}
-      - SPRING_FLYWAY_URL=jdbc:postgresql://postgres/${STELLIO_SUBSCRIPTION_DB_DATABASE}
-      - SPRING_R2DBC_USERNAME=${POSTGRES_USER}
-      - SPRING_R2DBC_PASSWORD=${POSTGRES_PASS}
-      - APPLICATION_GRAYLOG_HOST=${APPLICATION_GRAYLOG_HOST}
-      - APPLICATION_GRAYLOG_PORT=${APPLICATION_GRAYLOG_PORT}
-      - APPLICATION_GRAYLOG_SOURCE=${APPLICATION_GRAYLOG_SOURCE}
-      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=${MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED}
-      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE}
-      - MANAGEMENT_METRICS_TAGS_APPLICATION=${STELLIO_SUBSCRIPTION_APP_NAME} - ${MANAGEMENT_METRICS_PF_TAG}
-      - SUBSCRIPTION_ENTITY-SERVICE-URL=${SUBSCRIPTION_ENTITY_SERVICE_URL}
-      - SUBSCRIPTION_STELLIO-URL=${SUBSCRIPTION_STELLIO_URL}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_started
-volumes:
-  postgres-storage:
-  kafka-storage:
-  grafana-storage:
+      - NGINX_PORT=80
+    networks:
+      apisix:
+
+
+networks:
+  apisix:
+    driver: bridge
+

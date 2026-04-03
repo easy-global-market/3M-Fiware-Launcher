@@ -72,10 +72,6 @@ services:
     container_name: search-service
     image: stellio/stellio-search-service:${STELLIO_DOCKER_TAG}
     restart: unless-stopped
-    volumes:
-      - type: bind
-        source: ./config/stellio/hosts
-        target: /etc/hosts
     environment:
       - APPLICATION_AUTHENTICATION_ENABLED=false
       - APPLICATION_TENANTS_0_ISSUER=${APPLICATION_TENANTS_0_ISSUER}
@@ -103,10 +99,6 @@ services:
     container_name: subscription-service
     image: stellio/stellio-subscription-service:${STELLIO_DOCKER_TAG}
     restart: unless-stopped
-    volumes:
-      - type: bind
-        source: ./config/stellio/hosts
-        target: /etc/hosts
     environment:
       - APPLICATION_AUTHENTICATION_ENABLED=false
       - APPLICATION_TENANTS_0_ISSUER=${APPLICATION_TENANTS_0_ISSUER}

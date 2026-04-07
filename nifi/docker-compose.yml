@@ -16,7 +16,6 @@ services:
     volumes:
       - ./certs:/opt/certs
       - conf:/opt/nifi/nifi-current/conf
-      - ./input_data:/opt/input_data
       - ./scripts:/opt/scripts
       - content_repository:/opt/nifi/nifi-current/content_repository
       - database_repository:/opt/nifi/nifi-current/database_repository

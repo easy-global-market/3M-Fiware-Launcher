@@ -1,17 +1,16 @@
 services:
   nifi:
-    image: easyglobalmarket/nifi:2.4.0-2
+    image: easyglobalmarket/nifi:2.7.2
     container_name: nifi
     restart: unless-stopped
     ports:
       - "8080:8080"
       - "8443:8443"
-      - "5064:5064"
       - "5050-5060:5050-5060"
     env_file:
       - path: .env.default
         required: true
-      - path: .env.default.local
+      - path: .env.local
         required: true
     volumes:
       - ./certs:/opt/certs

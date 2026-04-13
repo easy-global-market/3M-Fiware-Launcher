@@ -56,10 +56,9 @@ routes:
       - "/wastecontainer"
     methods: [ "GET" ]
     upstream:
-      scheme: https
+      scheme: http
       nodes:
         "10.150.123.41:8443": 1
       type: roundrobin
-      tls:
-        verify: false
+
 #END

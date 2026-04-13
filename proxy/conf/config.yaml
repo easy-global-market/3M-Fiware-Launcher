@@ -33,3 +33,9 @@ plugins:
   - ext-plugin-pre-req
   - fault-injection
   - serverless-pre-function
+
+
+nginx_config:
+  http_configuration_snippet: |
+    lua_shared_dict prometheus-cache 10m;
+    lua_shared_dict plugin-limit-conn 10m;

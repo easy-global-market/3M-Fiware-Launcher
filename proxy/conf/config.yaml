@@ -23,3 +23,13 @@ deployment:
   role: data_plane
   role_data_plane:
     config_provider: yaml
+plugins:
+  - real-ip
+  - ai
+  - client-control
+  - proxy-control
+  - request-id
+  - zipkin
+  - ext-plugin-pre-req
+  - fault-injection
+  - serverless-pre-function

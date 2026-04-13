@@ -14,8 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-plugins:
-  - serverless-pre-function
+
 routes:
   - id: swagger-ui
     uri: /get
@@ -23,7 +22,7 @@ routes:
         nodes:
             "web1:80": 1
         type: roundrobin
-  - id: stellio api
+  - id: stellio-api
     uri: /ngsi-ld/v1/*
     methods: ["GET"]
     upstream:

@@ -28,7 +28,7 @@ routes:
     upstream:
       nodes:
         "10.150.123.42:8080": 1
-    type: roundrobin
+      type: roundrobin
     plugins:
       serverless-pre-function:
         functions:
@@ -56,9 +56,9 @@ routes:
       - "/wastecontainer"
     methods: [ "GET" ]
     upstream:
-      type: roundrobin
       scheme: https
       nodes:
         "10.150.123.41:8443": 1
+      type: roundrobin
 
 #END

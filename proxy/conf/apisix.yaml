@@ -35,7 +35,7 @@ routes:
           - |
             return function(conf, ctx)
                 local core = require("apisix.core")
-                local header_val = core.request.get_header(ctx, "Link")
+                local header_val = core.request.header(ctx, "Link")
             
                 if not header_val then
                     core.request.set_header(ctx, "Link",

@@ -33,7 +33,7 @@ routes:
       serverless-pre-function:
         functions:
           - |
-            return add_link_header(conf, ctx)
+            return function(conf, ctx)
                 local core = require("apisix.core")
                 local header_val = core.request.get_header(ctx, "Link")
             

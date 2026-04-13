@@ -1,0 +1,22 @@
+server:
+  http_listen_port: 3200
+  log_level: info
+
+distributor:
+  receivers:
+      otlp:
+        protocols:
+          http:
+            endpoint: "0.0.0.0:4318"
+
+compactor:
+  compaction:
+    block_retention: 720h                # configure total trace retention here
+
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal         # where to store the wal locally
+    local:
+      path: /var/tempo/blocks

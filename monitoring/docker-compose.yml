@@ -1,0 +1,57 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.11.1
+    restart: always
+    ports:
+      - 9090:9090/tcp
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus-storage:/prometheus
+    command: 
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+
+  grafana:
+    image: grafana/grafana:12.4.1
+    restart: always
+    environment:
+      GF_SMTP_ENABLED: ${GF_SMTP_ENABLED}
+      GF_SMTP_HOST: ${GF_SMTP_HOST}
+      GF_SMTP_FROM_ADDRESS: ${GF_SMTP_FROM_ADDRESS}
+      GF_SMTP_FROM_NAME: ${GF_SMTP_FROM_NAME}
+      GF_INSTALL_PLUGINS: ${GF_INSTALL_PLUGINS}
+      GF_FEATURE_TOGGLES_ENABLE: prometheusMetricEncyclopedia,enableDatagridEditing
+      GF_SERVER_ROOT_URI: ${ROOT_URL}
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+  tempo:
+    image: grafana/tempo:2.10.0
+    restart: always
+    ports:
+      - "4318:4318" # otlp http
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo.yml
+      - tempo-storage:/var/tempo
+    command:
+      - '--config.file=/etc/tempo.yml'
+
+  blackbox_exporter:
+    image: prom/blackbox-exporter:v0.28.0
+    container_name: blackbox_exporter
+    restart: always
+    ports: 
+      - "9115:9115"
+    volumes:
+      - ./blackbox:/config
+    command:
+      - '--config.file=/config/blackbox.yml'
+
+volumes:
+  grafana-storage:
+  prometheus-storage:
+  tempo-storage:

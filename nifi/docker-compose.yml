@@ -1,6 +1,6 @@
 services:
   nifi:
-    image: easyglobalmarket/nifi:2.7.2
+    image: easyglobalmarket/nifi:2.8.0
     container_name: nifi
     restart: unless-stopped
     ports:

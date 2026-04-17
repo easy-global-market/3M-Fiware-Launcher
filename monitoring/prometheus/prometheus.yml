@@ -82,3 +82,10 @@ scrape_configs:
   - targets: [ 'https://10.150.123.41:8080' ]
     labels:
       name: 'NiFi'
+  relabel_configs:
+  - source_labels: [ __address__ ]
+    target_label: __param_target
+  - source_labels: [ __param_target ]
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox_exporter:9115

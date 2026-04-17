@@ -79,7 +79,7 @@ scrape_configs:
   params:
     module: [ http_200_basic ]
   static_configs:
-  - targets: [ 'https://10.150.123.41:8080' ]
+  - targets: [ 'https://10.150.123.41:8080/nifi' ]
     labels:
       name: 'NiFi'
   relabel_configs:

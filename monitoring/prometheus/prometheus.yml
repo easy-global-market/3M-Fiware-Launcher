@@ -7,8 +7,78 @@ global:
   # Attach these labels to any time series or alerts when communicating with
   # external systems (federation, remote storage, Alertmanager).
   external_labels:
-    monitor: 'egm-infra'
+    monitor: 'fiware-infra'
 
 scrape_configs:
 # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
 
+- job_name: 'Stellio VM'
+  static_configs:
+  - targets: [ '10.150.123.42:9100' ]
+
+- job_name: 'NiFi VM'
+  static_configs:
+  - targets: [ '10.150.123.41:9100' ]
+
+- job_name: 'Keycloak VM'
+  static_configs:
+  - targets: [ '10.150.123.52:9100' ]
+
+- job_name: 'Proxy VM'
+  static_configs:
+  - targets: [ '10.150.123.49:9100' ]
+
+- job_name: 'Admin VM'
+  static_configs:
+  - targets: [ '10.150.123.13:9100' ]
+
+- job_name: 'Stellio Docker'
+  static_configs:
+  - targets: [ '10.150.123.42:9200' ]
+
+- job_name: 'NiFi Docker'
+  static_configs:
+  - targets: [ '10.150.123.41:9200' ]
+
+- job_name: 'Keycloak Docker'
+  static_configs:
+  - targets: [ '10.150.123.52:9200' ]
+
+- job_name: 'Proxy Docker'
+  static_configs:
+  - targets: [ '10.150.123.49:9200' ]
+
+- job_name: 'Admin Docker'
+  static_configs:
+  - targets: [ '10.150.123.13:9200' ]
+
+- job_name: 'Stellio Services'
+  metrics_path: /probe
+  params:
+    module: [ http_200_stellio ]
+  static_configs:
+  - targets: [ 'http://10.150.123.42:8080/actuator/health' ]
+    labels:
+      name: 'API Gateway'
+  - targets: [ 'http://10.150.123.42:8083/actuator/health' ]
+    labels:
+      name: 'Search Service'
+  - targets: [ 'http://10.150.123.42:8084/actuator/health' ]
+    labels:
+      name: 'Subscription Service'
+  relabel_configs:
+  - source_labels: [ __address__ ]
+    target_label: __param_target
+  - source_labels: [ __param_target ]
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox_exporter:9115
+
+- job_name: 'Other Web Services'
+  metrics_path: /probe
+  params:
+    module: [ http_200_basic ]
+  static_configs:
+  - targets: [ 'https://10.150.123.41:8080' ]
+    labels:
+      name: 'NiFi'

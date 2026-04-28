@@ -10939,7 +10939,6 @@ html.dark-mode .swagger-ui .topbar .topbar-wrapper {
     flex: 3;
     justify-content: flex-end;
     margin-left: auto;
-    max-width: 600px
 }
 
 .swagger-ui .topbar .download-url-wrapper input[type=text] {

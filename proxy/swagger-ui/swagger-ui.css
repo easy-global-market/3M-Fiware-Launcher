@@ -1,3 +1,8 @@
+/* this file is the base swagger ui css with slight modification marked with */
+/***START-MODIFICATION***/
+/***END-MODIFICATION***/
+/***LINE-MODIFIED***/
+
 .swagger-ui {
     color: #3b4151;
     container-name: swagger-ui;
@@ -10885,7 +10890,7 @@
     font-style: italic;
     font-weight: 600
 }
-
+/***START-MODIFICATION***/
 .swagger-ui .topbar {
     background-color: #73478e;
     padding: 10px 0
@@ -10908,6 +10913,7 @@ html.dark-mode .swagger-ui .topbar .topbar-wrapper {
 .swagger-ui .topbar .topbar-wrapper > *:first-child {
     visibility: hidden;
 }
+/***END-MODIFICATION***/
 
 @container swagger-ui (max-width: 550px) {
     .swagger-ui .topbar .topbar-wrapper {
@@ -10933,13 +10939,14 @@ html.dark-mode .swagger-ui .topbar .topbar-wrapper {
     margin: 0;
     padding: 0 10px
 }
-
+/***START-MODIFICATION***/
 .swagger-ui .topbar .download-url-wrapper {
     display: flex;
     flex: 3;
     justify-content: flex-end;
     margin-left: auto;
 }
+/***END-MODIFICATION***/
 
 .swagger-ui .topbar .download-url-wrapper input[type=text] {
     border: 2px solid #d5c7dd;
@@ -11168,6 +11175,7 @@ html.dark-mode .swagger-ui .topbar .topbar-wrapper {
 }
 
 .swagger-ui .scopes h2 a {
+    /***LINED-MODIFIED***/
     color: #73478e;
     cursor: pointer;
     font-size: 12px;
@@ -11757,11 +11765,13 @@ html.dark-mode .swagger-ui .topbar {
 }
 
 html.dark-mode .swagger-ui .topbar .download-url-wrapper .download-url-button {
+    /***LINED-MODIFIED***/
     background: #73478e !important;
     color: #e4e6e6
 }
 
 html.dark-mode .swagger-ui .topbar .download-url-wrapper .download-url-input {
+    /***LINED-MODIFIED***/
     border-color: #73478e
 }
 

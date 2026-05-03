@@ -413,6 +413,9 @@ paths:
     get:
       tags:
        - NGSI-LD Temporal Queries
+       - Historique des places Vélomagg
+       - Historique des places de parking en ouvrage
+       - Historique des comptages vélo et piéton
       summary: Query temporal evolution of an entity
       description: |-
         NGSI-LD temporal endpoint for querying the historical data of a specific entity.

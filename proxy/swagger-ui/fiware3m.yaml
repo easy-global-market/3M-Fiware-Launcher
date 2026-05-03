@@ -121,7 +121,7 @@ paths:
     get:
       deprecated: true
       tags:
-       - Disponibilité des places dans les parkings de Montpellier Méditerranée Métropole
+       - Information sur les places de parking
       #summary: Get off street parking list
       #description: Returns off street parking list
       #operationId: OffStreetParkingList
@@ -165,7 +165,7 @@ paths:
     get:
       deprecated: true
       tags:
-       - Parking en ouvrage
+       - Information sur les places de parking
       #summary: Get parking spaces list
       #description: Returns parking spaces list
       #operationId: ParkingSpacesList
@@ -392,21 +392,199 @@ paths:
             type: string
           required: false
       responses:
-        '200': 
-          description: |- 
+        '200':
+          description: |-
             Le modèle actuel est un schéma personnalisé et proposé par la Métropole de Montpellier, des modèles wastecontainer sont sur le site https://smartdatamodels.org/.
 
           content:
             application/json:
-              schema: 
+              schema:
                 $ref: '#/components/schemas/WasteContainer'
-        "404": 
-          description: Entity not Found   
+        "404":
+          description: Entity not Found
         "405":
           description:  Method Not Allowed
         "429":
           description:  Too many requests
-        "500": 
+        "500":
+          description: Internal Error
+
+  /ngsi-ld/v1/entities?type=EcoCounter:
+    get:
+      tags:
+       - Description Eco-Compteurs
+      parameters:
+       -  in: query
+          name: type
+          description: Entity type (fixed to EcoCounter)
+          schema:
+            type: string
+            enum:
+              - EcoCounter
+          required: true
+       -  in: query
+          name: id
+          description: |-
+            Returns entities whose ID matches one of the elements in the list.
+            ex: "urn:ngsi-ld:EcoCounter:XTH19101158"
+          schema:
+            type: string
+          required: false
+       -  in: query
+          name: limit
+          schema:
+            type: integer
+            default: 1000
+          description: Limit the number of elements of entities to return (max 1000)
+          required: false
+      responses:
+        '200':
+          description: |-
+            Le smart data modèle des Eco-Compteurs n'est pas encore disponible sur le site https://smartdatamodels.org/ pour cette raison le modèle actuel est un schéma personnalisé et proposé par la Métropole de Montpellier.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ecocounter'
+        "404":
+          description: Entity not Found
+        "405":
+          description:  Method Not Allowed
+        "429":
+          description:  Too many requests ( max per second 10000, max per hour 2000000)
+        "500":
+          description: Internal Error
+
+  /ngsi-ld/v1/entities?type=BikeHireDockingStation:
+    get:
+      tags:
+       - Disponibilité des vélos Vélomagg
+      parameters:
+       -  in: query
+          name: type
+          description: Entity type (fixed to BikeHireDockingStation)
+          schema:
+            type: string
+            enum:
+              - BikeHireDockingStation
+          required: true
+       -  in: query
+          name: id
+          description: |-
+            Returns entities whose ID matches one of the elements in the list.
+            ex: "urn:ngsi-ld:station:001"
+          schema:
+            type: string
+          required: false
+       -  in: query
+          name: limit
+          schema:
+            type: integer
+            default: 1000
+          description: Limit the number of elements of entities to return (max 1000)
+          required: false
+      responses:
+        '200':
+          description: Data model example https://smart-data-models.github.io/dataModel.Transportation/BikeHireDockingStation/examples/example-normalized.json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bikestation'
+        "404":
+          description: Entity not Found
+        "405":
+          description:  Method Not Allowed
+        "429":
+          description:  Too many requests ( max per second 10000, max per hour 2000000)
+        "500":
+          description: Internal Error
+
+  /ngsi-ld/v1/entities?type=WasteContainer:
+    get:
+      tags:
+       - Taux de remplissage des conteneurs verre
+      parameters:
+       -  in: query
+          name: type
+          description: Entity type (fixed to WasteContainer)
+          schema:
+            type: string
+            enum:
+              - WasteContainer
+          required: true
+       -  in: query
+          name: id
+          description: |-
+            Returns entities whose ID matches one of the elements in the list.
+            ex: "urn:ngsi-ld:WasteContainer:V_0510"
+          schema:
+            type: string
+          required: false
+       -  in: query
+          name: limit
+          schema:
+            type: integer
+            default: 1000
+          description: Limit the number of elements of entities to return (max 1000)
+          required: false
+      responses:
+        '200':
+          description: |-
+            Le modèle actuel est un schéma personnalisé et proposé par la Métropole de Montpellier, des modèles wastecontainer sont sur le site https://smartdatamodels.org/.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WasteContainer'
+        "404":
+          description: Entity not Found
+        "405":
+          description:  Method Not Allowed
+        "429":
+          description:  Too many requests ( max per second 10000, max per hour 2000000)
+        "500":
+          description: Internal Error
+
+  /ngsi-ld/v1/entities?type=OffStreetParking:
+    get:
+      tags:
+        - Information sur les places de parking
+      parameters:
+       -  in: query
+          name: type
+          description: Entity type (fixed to OffStreetParking)
+          schema:
+            type: string
+            enum:
+              - OffStreetParking
+          required: true
+       -  in: query
+          name: id
+          description: |-
+            Returns entities whose ID matches one of the elements in the list.
+            ex: "urn:ngsi-ld:parking:001"
+          schema:
+            type: string
+          required: false
+       -  in: query
+          name: limit
+          schema:
+            type: integer
+            default: 1000
+          description: Limit the number of elements of entities to return (max 1000)
+          required: false
+      responses:
+        '200':
+          description: Data model example https://smart-data-models.github.io/dataModel.Parking/OffStreetParking/examples/example-normalized.json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OffStreetParking'
+        "404":
+          description: Entity not Found
+        "405":
+          description:  Method Not Allowed
+        "429":
+          description:  Too many requests ( max per second 10000, max per hour 2000000)
+        "500":
           description: Internal Error
 
 

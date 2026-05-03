@@ -121,7 +121,7 @@ paths:
     get:
       deprecated: true
       tags:
-       - Information sur les places de parking
+       - Disponibilité des places dans les parkings de Montpellier Méditerranée Métropole
       #summary: Get off street parking list
       #description: Returns off street parking list
       #operationId: OffStreetParkingList
@@ -165,7 +165,7 @@ paths:
     get:
       deprecated: true
       tags:
-       - Information sur les places de parking
+       - Parking en ouvrage
       #summary: Get parking spaces list
       #description: Returns parking spaces list
       #operationId: ParkingSpacesList
@@ -409,13 +409,93 @@ paths:
         "500":
           description: Internal Error
 
+  /ngsi-ld/v1/entities:
+    get:
+      tags:
+       - NGSI-LD Entities
+      summary: Query NGSI-LD entities with full filtering capabilities
+      description: |-
+        Complete NGSI-LD endpoint for querying entities with support for:
+        - Type filtering
+        - Attribute queries (q parameter)
+        - Geo-spatial queries (georel, geometry, coordinates)
+        - Attribute projection (attrs)
+        - Result sorting (orderBy - NGSI-LD v1.9)
+        - Result limiting and pagination
+      parameters:
+       -  in: query
+          name: type
+          description: |-
+            Entity type to query.
+
+            Available types:
+            - EcoCounter
+            - BikeHireDockingStation
+            - WasteContainer
+            - OffStreetParking
+          schema:
+            type: string
+            enum:
+              - EcoCounter
+              - BikeHireDockingStation
+              - WasteContainer
+              - OffStreetParking
+          required: true
+       -  $ref: '#/components/parameters/idParameter'
+       -  $ref: '#/components/parameters/limitParameter'
+       -  $ref: '#/components/parameters/qParameter'
+       -  $ref: '#/components/parameters/attrsParameter'
+       -  $ref: '#/components/parameters/orderByParameter'
+       -  $ref: '#/components/parameters/georelParameter'
+       -  $ref: '#/components/parameters/geometryParameter'
+       -  $ref: '#/components/parameters/coordinatesParameter'
+      responses:
+        '200':
+          description: |-
+            Returns entities based on the specified type and filter parameters.
+
+            Data model references:
+            - EcoCounter: Custom schema by Montpellier Métropole
+            - BikeHireDockingStation: https://smart-data-models.github.io/dataModel.Transportation/BikeHireDockingStation/examples/example-normalized.json
+            - WasteContainer: Custom schema by Montpellier Métropole
+            - OffStreetParking: https://smart-data-models.github.io/dataModel.Parking/OffStreetParking/examples/example-normalized.json
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Ecocounter'
+                  - $ref: '#/components/schemas/Bikestation'
+                  - $ref: '#/components/schemas/WasteContainer'
+                  - $ref: '#/components/schemas/OffStreetParking'
+        "400":
+          description: Bad Request - invalid parameters
+        "404":
+          description: Entity not Found
+        "405":
+          description:  Method Not Allowed
+        "429":
+          description:  Too many requests ( max per second 10000, max per hour 2000000)
+        "500":
+          description: Internal Error
+
   /ngsi-ld/v1/entities?type=EcoCounter:
     get:
       tags:
        - Description Eco-Compteurs
+      summary: Get EcoCounter entities
+      description: Simplified endpoint for querying EcoCounter entities. For geo-queries, use /ngsi-ld/v1/entities
       parameters:
+       -  in: query
+          name: type
+          description: Entity type (fixed to EcoCounter)
+          schema:
+            type: string
+            enum:
+              - EcoCounter
+          required: true
        -  $ref: '#/components/parameters/idParameter'
        -  $ref: '#/components/parameters/limitParameter'
+       -  $ref: '#/components/parameters/qParameter'
       responses:
         '200':
           description: |-
@@ -437,9 +517,20 @@ paths:
     get:
       tags:
        - Disponibilité des vélos Vélomagg
+      summary: Get BikeHireDockingStation entities
+      description: Simplified endpoint for querying bike docking stations. For geo-queries, use /ngsi-ld/v1/entities
       parameters:
+       -  in: query
+          name: type
+          description: Entity type (fixed to BikeHireDockingStation)
+          schema:
+            type: string
+            enum:
+              - BikeHireDockingStation
+          required: true
        -  $ref: '#/components/parameters/idParameter'
        -  $ref: '#/components/parameters/limitParameter'
+       -  $ref: '#/components/parameters/qParameter'
       responses:
         '200':
           description: Data model example https://smart-data-models.github.io/dataModel.Transportation/BikeHireDockingStation/examples/example-normalized.json
@@ -460,9 +551,20 @@ paths:
     get:
       tags:
        - Taux de remplissage des conteneurs verre
+      summary: Get WasteContainer entities
+      description: Simplified endpoint for querying waste containers. For geo-queries, use /ngsi-ld/v1/entities
       parameters:
+       -  in: query
+          name: type
+          description: Entity type (fixed to WasteContainer)
+          schema:
+            type: string
+            enum:
+              - WasteContainer
+          required: true
        -  $ref: '#/components/parameters/idParameter'
        -  $ref: '#/components/parameters/limitParameter'
+       -  $ref: '#/components/parameters/qParameter'
       responses:
         '200':
           description: |-
@@ -483,10 +585,21 @@ paths:
   /ngsi-ld/v1/entities?type=OffStreetParking:
     get:
       tags:
-        - Information sur les places de parking
+       - Disponibilité des places dans les parkings de Montpellier Méditerranée Métropole
+      summary: Get OffStreetParking entities
+      description: Simplified endpoint for querying parking facilities. For geo-queries, use /ngsi-ld/v1/entities
       parameters:
+       -  in: query
+          name: type
+          description: Entity type (fixed to OffStreetParking)
+          schema:
+            type: string
+            enum:
+              - OffStreetParking
+          required: true
        -  $ref: '#/components/parameters/idParameter'
        -  $ref: '#/components/parameters/limitParameter'
+       -  $ref: '#/components/parameters/qParameter'
       responses:
         '200':
           description: Data model example https://smart-data-models.github.io/dataModel.Parking/OffStreetParking/examples/example-normalized.json
@@ -530,6 +643,111 @@ components:
           type: integer
           default: 1000
         description: Limit the number of elements of entities to return (max 1000)
+        required: false
+
+      qParameter:
+        in: query
+        name: q
+        description: |-
+          Query filter for selecting entities based on attribute values.
+
+          Operators: ==, !=, >, <, >=, <=, ~=
+
+          Example: fillingLevel>50, q=address[streetAddress]=="Corum"
+        schema:
+          type: string
+        required: false
+
+      georelParameter:
+        in: query
+        name: georel
+        description: |-
+          **Geo-Query (1/3):** Spatial relationship for geo-queries.
+
+          ⚠️ Must be used together with 'geometry' and 'coordinates' parameters.
+
+          Values:
+          - near;maxDistance==<distance> (proximity query in meters)
+          - within (contained within)
+          - contains (contains the geometry)
+          - intersects (intersects with)
+          - equals (geometrically equal)
+          - disjoint (does not intersect)
+
+          Example: near;maxDistance==1000
+        schema:
+          type: string
+        required: false
+
+      geometryParameter:
+        in: query
+        name: geometry
+        description: |-
+          **Geo-Query (2/3):** Geometry type for geo-queries.
+
+          ⚠️ Must be used together with 'georel' and 'coordinates' parameters.
+
+          Example: Point
+        schema:
+          type: string
+          enum:
+            - Point
+            - Polygon
+            - LineString
+            - MultiPoint
+            - MultiLineString
+            - MultiPolygon
+        required: false
+
+      coordinatesParameter:
+        in: query
+        name: coordinates
+        description: |-
+          **Geo-Query (3/3):** Coordinates for geo-queries in GeoJSON format.
+
+          ⚠️ Must be used together with 'georel' and 'geometry' parameters.
+
+          Format depends on geometry type:
+          - Point: [longitude, latitude]
+          - Polygon: [[[lon1,lat1],[lon2,lat2],...,[lon1,lat1]]]
+          - LineString: [[lon1,lat1],[lon2,lat2],...]
+
+          Example for Point near Montpellier: [3.88,43.60]
+        schema:
+          type: string
+        required: false
+
+      attrsParameter:
+        in: query
+        name: attrs
+        description: |-
+          Comma-separated list of attribute names to include in the response.
+
+          If not specified, all attributes are returned.
+
+          Example: availableBikeNumber,location
+        schema:
+          type: string
+        required: false
+
+      orderByParameter:
+        in: query
+        name: orderBy
+        description: |-
+          Comma-separated list of attributes to sort the results.
+
+          Added in NGSI-LD v1.9 specification.
+
+          Syntax:
+          - attributeName (ascending order, default)
+          - attributeName;desc (descending order)
+
+          Examples:
+          - orderBy=name (sort by name ascending)
+          - orderBy=name,id;desc (sort by name ascending, then by id descending)
+          - orderBy=availableSpotNumber;desc (sort by available spots descending)
+        schema:
+          type: string
         required: false
 
     schemas:

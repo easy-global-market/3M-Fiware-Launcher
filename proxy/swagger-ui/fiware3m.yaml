@@ -121,7 +121,7 @@ paths:
     get:
       deprecated: true
       tags:
-       - Disponibilité des places dans les parkings de Montpellier Méditerranée Métropole
+       - Parkings
       #summary: Get off street parking list
       #description: Returns off street parking list
       #operationId: OffStreetParkingList
@@ -165,7 +165,7 @@ paths:
     get:
       deprecated: true
       tags:
-       - Parking en ouvrage
+       - Parkings
       #summary: Get parking spaces list
       #description: Returns parking spaces list
       #operationId: ParkingSpacesList
@@ -409,6 +409,55 @@ paths:
         "500":
           description: Internal Error
 
+  /ngsi-ld/v1/temporal/entities/{entityId}:
+    get:
+      tags:
+       - NGSI-LD Temporal Queries
+      summary: Query temporal evolution of an entity
+      description: |-
+        NGSI-LD temporal endpoint for querying the historical data of a specific entity.
+
+        Supports BikeHireDockingStation, OffStreetParking, and EcoCounter entities.
+      parameters:
+       -  name: entityId
+          in: path
+          description: |-
+            Entity identifier.
+
+            Examples:
+            - urn:ngsi-ld:station:001 (BikeHireDockingStation)
+            - urn:ngsi-ld:parking:001 (OffStreetParking)
+            - urn:ngsi-ld:EcoCounter:XTH19101158 (EcoCounter)
+          schema:
+            type: string
+          required: true
+       -  $ref: '#/components/parameters/formatParameter'
+       -  $ref: '#/components/parameters/timerelParameter'
+       -  $ref: '#/components/parameters/timeAtParameter'
+       -  $ref: '#/components/parameters/endTimeAtParameter'
+       -  $ref: '#/components/parameters/attrsParameter'
+      responses:
+        '200':
+          description: |-
+            Returns temporal data for the specified entity.
+
+            Response format depends on the 'format' parameter (default: temporalValues).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/BikestationTimeseries'
+                  - $ref: '#/components/schemas/OffStreetParkingTimeseries'
+                  - $ref: '#/components/schemas/EcocounterTimeseries'
+        "404":
+          description: Entity not Found
+        "405":
+          description:  Method Not Allowed
+        "429":
+          description:  Too many requests ( max per second 10000, max per hour 2000000)
+        "500":
+          description: Internal Error
+
   /ngsi-ld/v1/entities:
     get:
       tags:
@@ -419,7 +468,7 @@ paths:
         - Type filtering
         - Attribute queries (q parameter)
         - Geo-spatial queries (georel, geometry, coordinates)
-        - Attribute projection (attrs)
+        - Attribute projection (attrs, pick, omit)
         - Result sorting (orderBy - NGSI-LD v1.9)
         - Result limiting and pagination
       parameters:
@@ -445,6 +494,8 @@ paths:
        -  $ref: '#/components/parameters/limitParameter'
        -  $ref: '#/components/parameters/qParameter'
        -  $ref: '#/components/parameters/attrsParameter'
+       -  $ref: '#/components/parameters/pickParameter'
+       -  $ref: '#/components/parameters/omitParameter'
        -  $ref: '#/components/parameters/orderByParameter'
        -  $ref: '#/components/parameters/georelParameter'
        -  $ref: '#/components/parameters/geometryParameter'
@@ -585,7 +636,7 @@ paths:
   /ngsi-ld/v1/entities?type=OffStreetParking:
     get:
       tags:
-       - Disponibilité des places dans les parkings de Montpellier Méditerranée Métropole
+       - Parkings
       summary: Get OffStreetParking entities
       description: Simplified endpoint for querying parking facilities. For geo-queries, use /ngsi-ld/v1/entities
       parameters:
@@ -651,9 +702,18 @@ components:
         description: |-
           Query filter for selecting entities based on attribute values.
 
-          Operators: ==, !=, >, <, >=, <=, ~=
+          Syntax: attribute operator value
 
-          Example: fillingLevel>50, q=address[streetAddress]=="Corum"
+          Operators:
+          - == (equal)
+          - != (not equal)
+          - > (greater than)
+          - < (less than)
+          - >= (greater or equal)
+          - <= (less or equal)
+          - ~= (pattern match)
+
+          Example: fillingLevel>50
         schema:
           type: string
         required: false
@@ -748,6 +808,71 @@ components:
           - orderBy=availableSpotNumber;desc (sort by available spots descending)
         schema:
           type: string
+        required: false
+
+      timerelParameter:
+        in: query
+        name: timerel
+        description: |-
+          Temporal relationship for temporal queries.
+
+          Values:
+          - before
+          - after
+          - between
+        schema:
+          type: string
+          enum:
+            - before
+            - after
+            - between
+        required: false
+
+      timeAtParameter:
+        in: query
+        name: timeAt
+        description: |-
+          Timestamp for temporal queries (ISO 8601 format).
+
+          Used with timerel.
+
+          Example: 2023-12-31T23:59:59Z
+        schema:
+          type: string
+          format: date-time
+        required: false
+
+      endTimeAtParameter:
+        in: query
+        name: endTimeAt
+        description: |-
+          End date for temporal range queries (ISO 8601 format).
+
+          Used with timerel=between.
+
+          Example: 2023-12-31T23:59:59Z
+        schema:
+          type: string
+          format: date-time
+        required: false
+
+      formatParameter:
+        in: query
+        name: format
+        description: |-
+          Response format for temporal queries.
+
+          Values:
+          - temporalValues (default) - Returns time series data
+          - normalized - Returns normalized entity representation
+
+          Default: temporalValues
+        schema:
+          type: string
+          enum:
+            - temporalValues
+            - normalized
+          default: temporalValues
         required: false
 
     schemas:

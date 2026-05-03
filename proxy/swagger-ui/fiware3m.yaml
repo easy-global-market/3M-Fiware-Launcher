@@ -414,29 +414,8 @@ paths:
       tags:
        - Description Eco-Compteurs
       parameters:
-       -  in: query
-          name: type
-          description: Entity type (fixed to EcoCounter)
-          schema:
-            type: string
-            enum:
-              - EcoCounter
-          required: true
-       -  in: query
-          name: id
-          description: |-
-            Returns entities whose ID matches one of the elements in the list.
-            ex: "urn:ngsi-ld:EcoCounter:XTH19101158"
-          schema:
-            type: string
-          required: false
-       -  in: query
-          name: limit
-          schema:
-            type: integer
-            default: 1000
-          description: Limit the number of elements of entities to return (max 1000)
-          required: false
+       -  $ref: '#/components/parameters/idParameter'
+       -  $ref: '#/components/parameters/limitParameter'
       responses:
         '200':
           description: |-
@@ -459,29 +438,8 @@ paths:
       tags:
        - Disponibilité des vélos Vélomagg
       parameters:
-       -  in: query
-          name: type
-          description: Entity type (fixed to BikeHireDockingStation)
-          schema:
-            type: string
-            enum:
-              - BikeHireDockingStation
-          required: true
-       -  in: query
-          name: id
-          description: |-
-            Returns entities whose ID matches one of the elements in the list.
-            ex: "urn:ngsi-ld:station:001"
-          schema:
-            type: string
-          required: false
-       -  in: query
-          name: limit
-          schema:
-            type: integer
-            default: 1000
-          description: Limit the number of elements of entities to return (max 1000)
-          required: false
+       -  $ref: '#/components/parameters/idParameter'
+       -  $ref: '#/components/parameters/limitParameter'
       responses:
         '200':
           description: Data model example https://smart-data-models.github.io/dataModel.Transportation/BikeHireDockingStation/examples/example-normalized.json
@@ -503,29 +461,8 @@ paths:
       tags:
        - Taux de remplissage des conteneurs verre
       parameters:
-       -  in: query
-          name: type
-          description: Entity type (fixed to WasteContainer)
-          schema:
-            type: string
-            enum:
-              - WasteContainer
-          required: true
-       -  in: query
-          name: id
-          description: |-
-            Returns entities whose ID matches one of the elements in the list.
-            ex: "urn:ngsi-ld:WasteContainer:V_0510"
-          schema:
-            type: string
-          required: false
-       -  in: query
-          name: limit
-          schema:
-            type: integer
-            default: 1000
-          description: Limit the number of elements of entities to return (max 1000)
-          required: false
+       -  $ref: '#/components/parameters/idParameter'
+       -  $ref: '#/components/parameters/limitParameter'
       responses:
         '200':
           description: |-
@@ -548,29 +485,8 @@ paths:
       tags:
         - Information sur les places de parking
       parameters:
-       -  in: query
-          name: type
-          description: Entity type (fixed to OffStreetParking)
-          schema:
-            type: string
-            enum:
-              - OffStreetParking
-          required: true
-       -  in: query
-          name: id
-          description: |-
-            Returns entities whose ID matches one of the elements in the list.
-            ex: "urn:ngsi-ld:parking:001"
-          schema:
-            type: string
-          required: false
-       -  in: query
-          name: limit
-          schema:
-            type: integer
-            default: 1000
-          description: Limit the number of elements of entities to return (max 1000)
-          required: false
+       -  $ref: '#/components/parameters/idParameter'
+       -  $ref: '#/components/parameters/limitParameter'
       responses:
         '200':
           description: Data model example https://smart-data-models.github.io/dataModel.Parking/OffStreetParking/examples/example-normalized.json
@@ -589,6 +505,33 @@ paths:
 
 
 components:
+    parameters:
+      idParameter:
+        in: query
+        name: id
+        description: |-
+          Returns entities whose ID matches one of the elements in the list.
+        schema:
+          type: string
+        required: false
+
+      offsetParameter:
+        in: query
+        name: offset
+        schema:
+          type: integer
+        description: The number of items to skip before starting to collect the result set
+        required: false
+
+      limitParameter:
+        in: query
+        name: limit
+        schema:
+          type: integer
+          default: 1000
+        description: Limit the number of elements of entities to return (max 1000)
+        required: false
+
     schemas:
       Bikestation:
         type: object 

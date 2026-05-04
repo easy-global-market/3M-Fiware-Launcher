@@ -12,7 +12,8 @@ info:
 
 
 servers:
-  - url: https://portail-api-data.montpellier3m.fr
+  - url: http://10.150.123.49:9080/ngsi-ld/v1
+  - url: https://portail-api-data.montpellier3m.fr/ngsi-ld/v1
 
 tags:
   - name: Disponibilité des vélos Vélomagg
@@ -33,12 +34,135 @@ tags:
     description: Endpoints NGSI-LD avec capacités complètes de filtrage et de requêtes
 
 paths:
-  /ngsi-ld/v1/entities?type=BikeHireDockingStation:
+  /entities:
+    get:
+      tags:
+        - NGSI-LD
+      summary: Query NGSI-LD entities with full filtering capabilities
+      description: |-
+        Complete NGSI-LD endpoint for querying entities with support for:
+        - Type filtering
+        - Attribute queries (q parameter)
+        - Geo-spatial queries (georel, geometry, coordinates)
+        - Attribute projection (attrs, pick, omit)
+        - Result sorting (orderBy - NGSI-LD v1.9)
+        - Result limiting and pagination
+      parameters:
+        - in: query
+          name: type
+          description: |-
+            Entity type to query.
+
+            Available types:
+            - EcoCounter
+            - BikeHireDockingStation
+            - WasteContainer
+            - OffStreetParking
+          schema:
+            type: string
+            enum:
+              - EcoCounter
+              - BikeHireDockingStation
+              - WasteContainer
+              - OffStreetParking
+          required: true
+        - $ref: '#/components/parameters/idParameter'
+        - $ref: '#/components/parameters/limitParameter'
+        - $ref: '#/components/parameters/qParameter'
+        - $ref: '#/components/parameters/attrsParameter'
+        - $ref: '#/components/parameters/orderByParameter'
+        - $ref: '#/components/parameters/georelParameter'
+        - $ref: '#/components/parameters/geometryParameter'
+        - $ref: '#/components/parameters/coordinatesParameter'
+      responses:
+        '200':
+          description: |-
+            Returns entities based on the specified type and filter parameters.
+
+            Data model references:
+            - EcoCounter: Custom schema by Montpellier Métropole
+            - BikeHireDockingStation: https://smart-data-models.github.io/dataModel.Transportation/BikeHireDockingStation/examples/example-normalized.json
+            - WasteContainer: Custom schema by Montpellier Métropole
+            - OffStreetParking: https://smart-data-models.github.io/dataModel.Parking/OffStreetParking/examples/example-normalized.json
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Ecocounter'
+                  - $ref: '#/components/schemas/Bikestation'
+                  - $ref: '#/components/schemas/WasteContainer'
+                  - $ref: '#/components/schemas/OffStreetParking'
+        "400":
+          description: Bad Request - invalid parameters
+        "404":
+          description: Entity not Found
+        "405":
+          description: Method Not Allowed
+        "429":
+          description: Too many requests ( max per second 10000, max per hour 2000000)
+        "500":
+          description: Internal Error
+
+  /temporal/entities/{entityId}:
+    get:
+      tags:
+        - NGSI-LD
+        - Historique des places Vélomagg
+        - Historique des places de parking en ouvrage
+        - Historique des comptages vélo et piéton
+      summary: Query temporal evolution of an entity
+      description: |-
+        NGSI-LD temporal endpoint for querying the historical data of a specific entity.
+        
+        Supports BikeHireDockingStation, OffStreetParking, and EcoCounter entities.
+      parameters:
+        - name: entityId
+          in: path
+          description: |-
+            Entity identifier.
+            
+            Examples:
+            - urn:ngsi-ld:station:001 (BikeHireDockingStation)
+            - urn:ngsi-ld:parking:001 (OffStreetParking)
+            - urn:ngsi-ld:EcoCounter:XTH19101158 (EcoCounter)
+          schema:
+            type: string
+          required: true
+        - $ref: '#/components/parameters/formatParameter'
+        - $ref: '#/components/parameters/timerelParameter'
+        - $ref: '#/components/parameters/timeAtParameter'
+        - $ref: '#/components/parameters/endTimeAtParameter'
+        - $ref: '#/components/parameters/attrsParameter'
+        - $ref: '#/components/parameters/aggrMethodsParameter'
+        - $ref: '#/components/parameters/aggrPeriodDurationParameter'
+      responses:
+        '200':
+          description: |-
+            Returns temporal data for the specified entity.
+            
+            Response format depends on the 'format' parameter (default: temporalValues).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/BikestationTimeseries'
+                  - $ref: '#/components/schemas/OffStreetParkingTimeseries'
+                  - $ref: '#/components/schemas/EcocounterTimeseries'
+        "404":
+          description: Entity not Found
+        "405":
+          description: Method Not Allowed
+        "429":
+          description: Too many requests ( max per second 10000, max per hour 2000000)
+        "500":
+          description: Internal Error
+
+  /entities?type=BikeHireDockingStation:
     get:
       tags:
        - Disponibilité des vélos Vélomagg
       summary: Get BikeHireDockingStation entities
-      description: Simplified endpoint for querying bike docking stations. For geo-queries, use /ngsi-ld/v1/entities
+      description: Simplified endpoint for querying bike docking stations. For geo-queries, use /entities
       parameters:
        -  in: query
           name: type
@@ -67,49 +191,32 @@ paths:
         "500":
           description: Internal Error
 
-  /ngsi-ld/v1/temporal/entities/{entityId}:
+  /entities?type=EcoCounter:
     get:
       tags:
-       - NGSI-LD
-       - Historique des places Vélomagg
-       - Historique des places de parking en ouvrage
-       - Historique des comptages vélo et piéton
-      summary: Query temporal evolution of an entity
-      description: |-
-        NGSI-LD temporal endpoint for querying the historical data of a specific entity.
-
-        Supports BikeHireDockingStation, OffStreetParking, and EcoCounter entities.
+        - Description Eco-Compteurs
+      summary: Get EcoCounter entities
+      description: Simplified endpoint for querying EcoCounter entities. For geo-queries, use /entities
       parameters:
-       -  name: entityId
-          in: path
-          description: |-
-            Entity identifier.
-
-            Examples:
-            - urn:ngsi-ld:station:001 (BikeHireDockingStation)
-            - urn:ngsi-ld:parking:001 (OffStreetParking)
-            - urn:ngsi-ld:EcoCounter:XTH19101158 (EcoCounter)
-          schema:
-            type: string
-          required: true
-       -  $ref: '#/components/parameters/formatParameter'
-       -  $ref: '#/components/parameters/timerelParameter'
-       -  $ref: '#/components/parameters/timeAtParameter'
-       -  $ref: '#/components/parameters/endTimeAtParameter'
-       -  $ref: '#/components/parameters/attrsParameter'
+        -  in: query
+           name: type
+           description: Entity type (fixed to EcoCounter)
+           schema:
+             type: string
+             enum:
+               - EcoCounter
+           required: true
+        -  $ref: '#/components/parameters/idParameter'
+        -  $ref: '#/components/parameters/limitParameter'
+        -  $ref: '#/components/parameters/qParameter'
       responses:
         '200':
           description: |-
-            Returns temporal data for the specified entity.
-
-            Response format depends on the 'format' parameter (default: temporalValues).
+            Le smart data modèle des Eco-Compteurs n'est pas encore disponible sur le site https://smartdatamodels.org/ pour cette raison le modèle actuel est un schéma personnalisé et proposé par la Métropole de Montpellier.
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/BikestationTimeseries'
-                  - $ref: '#/components/schemas/OffStreetParkingTimeseries'
-                  - $ref: '#/components/schemas/EcocounterTimeseries'
+                $ref: '#/components/schemas/Ecocounter'
         "404":
           description: Entity not Found
         "405":
@@ -119,12 +226,12 @@ paths:
         "500":
           description: Internal Error
 
-  /ngsi-ld/v1/entities?type=OffStreetParking:
+  /entities?type=WasteContainer:
     get:
       tags:
        - Taux de remplissage des conteneurs verre
       summary: Get WasteContainer entities
-      description: Simplified endpoint for querying waste containers. For geo-queries, use /ngsi-ld/v1/entities
+      description: Simplified endpoint for querying waste containers. For geo-queries, use /entities
       parameters:
        -  in: query
           name: type
@@ -154,12 +261,12 @@ paths:
         "500":
           description: Internal Error
 
-  /ngsi-ld/v1/entities?type=OffStreetParking:
+  /entities?type=OffStreetParking:
     get:
       tags:
        - Parkings
       summary: Get OffStreetParking entities
-      description: Simplified endpoint for querying parking facilities. For geo-queries, use /ngsi-ld/v1/entities
+      description: Simplified endpoint for querying parking facilities. For geo-queries, use /entities
       parameters:
        -  in: query
           name: type
@@ -188,7 +295,7 @@ paths:
         "500":
           description: Internal Error
 
-  /ecocounter:
+  /bikestation:
     get:
       deprecated: true
       tags:
@@ -220,10 +327,10 @@ paths:
           description: Data model example https://smart-data-models.github.io/dataModel.Transportation/BikeHireDockingStation/examples/example-normalized.json
           content:
             application/json:
-              schema: 
-                $ref: '#/components/schemas/Bikestation'
-        "404": 
-          description: Entity not Found   
+              schema:
+                $ref: '#/components/schemas/Deprecated Bikestation'
+        "404":
+          description: Entity not Found
         "405":
           description:  Method Not Allowed
         "429":
@@ -277,15 +384,15 @@ paths:
             First recorded date at 2023-01-04
           content:
             application/json:
-              schema: 
-                $ref: '#/components/schemas/BikestationTimeseries'
-        "404": 
-          description: Entity not Found   
+              schema:
+                $ref: '#/components/schemas/Deprecated BikestationTimeseries'
+        "404":
+          description: Entity not Found
         "405":
           description:  Method Not Allowed
         "429":
           description:  Too many requests ( max per second 10000, max per hour 2000000)
-        "500": 
+        "500":
           description: Internal Error
 
 
@@ -317,19 +424,19 @@ paths:
           description: Limit the number of elements of entities to return (max 1000)
           required: true
       responses:
-        '200': 
+        '200':
           description: Data model example https://smart-data-models.github.io/dataModel.Parking/OffStreetParking/examples/example-normalized.json
           content:
             application/json:
-              schema: 
-                $ref: '#/components/schemas/OffStreetParking'
-        "404": 
-          description: Entity not Found   
+              schema:
+                $ref: '#/components/schemas/Deprecated OffStreetParking'
+        "404":
+          description: Entity not Found
         "405":
           description:  Method Not Allowed
         "429":
           description:  Too many requests ( max per second 10000, max per hour 2000000)
-        "500": 
+        "500":
           description: Internal Error
 
 
@@ -365,22 +472,22 @@ paths:
           description: Limit the number of elements of entities to return (max 1000)
           required: true
       responses:
-        '200': 
-          description: Data model example 
+        '200':
+          description: Data model example
           content:
             application/json:
-              schema: 
-                $ref: '#/components/schemas/Parkingspace'
-        "404": 
-          description: Entity not Found   
+              schema:
+                $ref: '#/components/schemas/Deprecated Parkingspace'
+        "404":
+          description: Entity not Found
         "405":
           description:  Method Not Allowed
         "429":
           description:  Too many requests ( max per second 10000, max per hour 2000000)
-        "500": 
+        "500":
           description: Internal Error
 
-   
+
   /parking_timeseries/{parkingId}/attrs/availableSpotNumber:
     get:
       deprecated: true
@@ -430,15 +537,15 @@ paths:
             Ex : « urn:ngsi-ld:parking:001 »  
           content:
             application/json:
-              schema: 
-                $ref: '#/components/schemas/OffStreetParkingTimeseries'
-        "404": 
-          description: Entity not Found   
+              schema:
+                $ref: '#/components/schemas/Deprecated OffStreetParkingTimeseries'
+        "404":
+          description: Entity not Found
         "405":
           description:  Method Not Allowed
         "429":
           description:  Too many requests ( max per second 10000, max per hour 2000000)
-        "500": 
+        "500":
           description: Internal Error
 
 
@@ -489,15 +596,15 @@ paths:
             First recorded date at 2023-01-12
           content:
             application/json:
-              schema: 
-                $ref: '#/components/schemas/EcocounterTimeseries'
-        "404": 
-          description: Entity not Found   
+              schema:
+                $ref: '#/components/schemas/Deprecated EcocounterTimeseries'
+        "404":
+          description: Entity not Found
         "405":
           description:  Method Not Allowed
         "429":
           description:  Too many requests ( max per second 10000, max per hour 2000000)
-        "500": 
+        "500":
           description: Internal Error
 
 
@@ -533,15 +640,15 @@ paths:
             Le smart data modèle des Eco-Compteurs n’est pas encore disponible sur le site https://smartdatamodels.org/ pour cette raison le modèle actuel est un schéma personnalisé et proposé par la Métropole de Montpellier.
           content:
             application/json:
-              schema: 
-                $ref: '#/components/schemas/Ecocounter'
-        "404": 
-          description: Entity not Found   
+              schema:
+                $ref: '#/components/schemas/Deprecated Ecocounter'
+        "404":
+          description: Entity not Found
         "405":
           description:  Method Not Allowed
         "429":
           description:  Too many requests ( max per second 10000, max per hour 2000000)
-        "500": 
+        "500":
           description: Internal Error
 
   /wastecontainer:
@@ -571,7 +678,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WasteContainer'
+                $ref: '#/components/schemas/Deprecated WasteContainer'
         "404":
           description: Entity not Found
         "405":
@@ -618,16 +725,15 @@ components:
 
           Syntax: attribute operator value
 
-          Operators:
-          - == (equal)
-          - != (not equal)
-          - > (greater than)
-          - < (less than)
-          - >= (greater or equal)
-          - <= (less or equal)
-          - ~= (pattern match)
-
-          Example: fillingLevel>50
+          Operators: ==, !=, >, <, >=, <=, ~=
+          
+          you can also use :
+           - and with ";" (ex: a=1;b=2)
+           - or with "|" (ex: a=1|b=2)
+          
+          Example: 
+          - fillingLevel>50
+          - q=address[streetAddress]=="Corum"
         schema:
           type: string
         required: false
@@ -774,27 +880,43 @@ components:
         in: query
         name: format
         description: |-
-          Response format for temporal queries.
-
-          Values:
-          - temporalValues (default) - Returns time series data
-          - normalized - Returns normalized entity representation
-
-          Default: temporalValues
+          Response format for temporal queries. 
+          Use 'aggregatedValues' to enable temporal aggregation.
         schema:
           type: string
           enum:
             - temporalValues
             - normalized
+            - aggregatedValues
           default: temporalValues
         required: false
 
-    schemas:
-      # Note: These schemas are shared between new NGSI-LD endpoints and deprecated endpoints
-      # They represent the data models used across both API versions
+      aggrMethodsParameter:
+        in: query
+        name: aggrMethods
+        description: |-
+          Comma-separated list of aggregation methods. 
+          Only applicable when format=aggregatedValues.
+        schema:
+          type: string
+          # Common NGSI-LD aggregation methods
+          example: max,avg
+        required: false
 
+      aggrPeriodDurationParameter:
+        in: query
+        name: aggrPeriodDuration
+        description: |-
+          ISO 8601 duration for the aggregation period.
+          Only applicable when format=aggregatedValues.
+        schema:
+          type: string
+          example: P1D
+        required: false
+
+    schemas: ### TODO REWORK THE NEW TYPES
       Bikestation:
-        type: object 
+        type: object
         properties:
             id: 
               type: string
@@ -901,7 +1023,6 @@ components:
                   example : 'working'
                 metadata:
                   type : object
-
       OffStreetParking:
         type: object 
         properties:
@@ -1052,69 +1173,7 @@ components:
                     type : integer
                     example : 239
                 metadata:
-                  type: object 
-
-
-      #pmr:
-      #   type: object 
-      #   properties:
-      #       id: 
-      #         type: string
-      #         example: 'urn:ngsi-ld:Pmr:452'
-      #        
-      #       type: 
-      #         type: string
-      #         example: 'PMR'
-      #        
-      #       Latitude:
-      #         type: object
-      #         properties:
-      #           type: 
-      #             type: string 
-      #             example : 'Double'
-      #           value : 
-      #             type : number
-      #             example : 43.6004246831643
-      #           metadata:
-      #             type : object
-      #
-      #       Longitude:
-      #         type: object
-      #         properties:
-      #           type: 
-      #             type: string 
-      #             example : 'Double'
-      #           value : 
-      #             type : number
-      #             example : 3.90040595142034
-      #           metadata:
-      #             type : object
-      #      
-      #       TimeInstant:
-      #         type: object
-      #         properties:
-      #           type: 
-      #             type: string 
-      #             example : 'DateTime'
-      #           value : 
-      #             type : string
-      #             example : '2022-10-17T19:13:00.374Z'
-      #           metadata:
-      #             type : object
-      #      
-      #       slotStatus:
-      #         type: object
-      #         properties:
-      #           type: 
-      #             type: string 
-      #             example : 'Float'
-      #           value : 
-      #             type : number
-      #             example : 
-      #           metadata:
-      #             type : object
-
-
+                  type: object
      
       Ecocounter:
         type: object 
@@ -1599,6 +1658,765 @@ components:
               metadata:
                 type: object
       
+          wasteType:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'Text'
+              value:
+                type: string
+                example: 'Verre'
+              metadata:
+                type: object
+
+      # Deprecated schemas - used by deprecated endpoints
+      # These are duplicates of the schemas above for backward compatibility
+
+      Deprecated Bikestation:
+        type: object
+        deprecated: true
+        properties:
+          id:
+            type: string
+            example: 'urn:ngsi-ld:station:001'
+
+          type:
+            type: string
+            example: 'BikeHireDockingStation'
+
+          address:
+            type: object
+            properties:
+              type:
+                type: string
+                example :  'PostalAddress'
+              value:
+                type : object
+                properties:
+                  addressCountry:
+                    type : string
+                    example : "FR"
+                  addressLocality:
+                    type : string
+                    example : "Montpellier"
+                  streetAddress:
+                    type : string
+                    example : "Rue Jules Ferry - Gare Saint-Roch"
+              metadata:
+                type: object
+
+          availableBikeNumber:
+            type: object
+            properties:
+              type:
+                type: string
+                example : 'Number'
+              value :
+                type : integer
+                example : 12
+              metadata:
+                type : object
+                properties:
+                  timestamp:
+                    type : object
+                    properties:
+                      type :
+                        type : string
+                        example : 'DateTime'
+                      value :
+                        type : string
+                        example : '2022-10-26T10:35:03.000Z'
+
+          freeSlotNumber :
+            type: object
+            properties:
+              type:
+                type: string
+                example :  'Number'
+              value:
+                type : integer
+                example : 9
+              metadata:
+                type: object
+
+          totalSlotNumber :
+            type: object
+            properties:
+              type:
+                type: string
+                example :  'Number'
+              value:
+                type : integer
+                example : 12
+              metadata:
+                type: object
+
+          location:
+            type: object
+            properties:
+              type:
+                type: string
+                example :  'geo:json'
+              value:
+                type : object
+                properties:
+                  type:
+                    type: string
+                    example :  'Point'
+                  coordinates :
+                    type: array
+                    items:
+                      example : 3.881346 , 43.605366
+              metadata:
+                type: object
+
+          status:
+            type: object
+            properties:
+              type:
+                type: string
+                example : 'Text'
+              value :
+                type : string
+                example : 'working'
+              metadata:
+                type : object
+
+
+      Deprecated BikestationTimeseries:
+        type: object
+        properties:
+          attrName:
+            type: string
+            example: "availableBikeNumber"
+          entityId:
+            type: string
+            example: "urn:ngsi-ld:station:001"
+          index:
+            type: array
+            items:
+              type: string
+            example: ["2022-12-19T17:57:46.000+00:00", "2022-12-29T17:57:46.000+00:00"]
+          values:
+            type: array
+            items:
+              type: integer
+              example: [12,11]
+      Deprecated OffStreetParking:
+        type: object
+        deprecated: true
+        properties:
+          id:
+            type: string
+            example: 'urn:ngsi-ld:parking:001'
+
+          type:
+            type: string
+            example: 'OffStreetParking'
+
+          allowedVehicleType:
+            type: object
+            properties:
+              type:
+                type: string
+                example :  'StructuredValue'
+              value:
+                type : array
+                items:
+                  type : string
+                  example : car , moped
+              metadata:
+                type: object
+
+          availableSpotNumber:
+            type: object
+            properties:
+              type:
+                type: string
+                example : 'Number'
+              value :
+                type : integer
+                example : 138
+              metadata:
+                type : object
+                properties:
+                  timestamp:
+                    type : object
+                    properties:
+                      type :
+                        type : string
+                        example : 'DateTime'
+                      value :
+                        type : string
+                        example : '2022-10-24T11:26:59.000Z'
+
+          category:
+            type: object
+            properties:
+              type:
+                type: string
+                example :  'StructuredValue'
+              value:
+                type : array
+                items:
+                  type : string
+                  example : feeCharged , barrierAccess , underground
+              metadata:
+                type: object
+
+          layout:
+            type: object
+            properties:
+              type:
+                type: string
+                example :  'StructuredValue'
+              value:
+                type : array
+                items:
+                  type : string
+                  example : multiLevel
+              metadata:
+                type: object
+
+          location:
+            type: object
+            properties:
+              type:
+                type: string
+                example :  'geo:json'
+              value:
+                type : object
+                properties:
+                  type:
+                    type: string
+                    example :  'Point'
+                  coordinates :
+                    type: array
+                    items:
+                      example : 3.88881893 , 43.60871606
+              metadata:
+                type: object
+
+          name :
+            type: object
+            properties:
+              type:
+                type: string
+                example :  'Text'
+              value:
+                type : string
+                example : 'Antigone'
+              metadata:
+                type: object
+
+          requiredPermit :
+            type: object
+            properties:
+              type:
+                type: string
+                example :  'Text'
+              value:
+                type : string
+                example : 'noPermitNeeded'
+              metadata:
+                type: object
+
+          status:
+            type: object
+            properties:
+              type:
+                type: string
+                example : 'Text'
+              value :
+                type : string
+                example : 'Open'
+              metadata:
+                type : object
+                properties:
+                  timestamp:
+                    type : object
+                    properties:
+                      type :
+                        type : string
+                        example : 'DateTime'
+                      value :
+                        type : string
+                        example : '2022-10-24T11:26:59.000Z'
+
+          totalSpotNumber :
+            type: object
+            properties:
+              type:
+                type: string
+                example :  'Number'
+              value:
+                type : integer
+                example : 239
+              metadata:
+                type: object
+      Deprecated OffStreetParkingTimeseries:
+        type: object
+        deprecated: true
+        properties:
+          attrName:
+            type: string
+            example: "availableSpotNumber"
+          entityId:
+            type: string
+            example: "urn:ngsi-ld:parking:001"
+          index:
+            type: array
+            items:
+              type: string
+            example: ["2022-12-20T00:02:55.000+00:00", "2022-12-21T00:02:55.000+00:00"]
+          values:
+            type: array
+            items:
+              type: integer
+            example: [161,160]
+      Deprecated Parkingspace:
+        type: object
+        deprecated: true
+        properties:
+          id:
+            type: string
+            example: 'urn:ngsi-ld:ParkingSpace:34172_ARCTRI'
+
+          type:
+            type: string
+            example: 'ParkingSpace'
+
+          name:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "Arc de Triomphe"
+
+          insee:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "34172"
+
+          address:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "rue Foch"
+
+          typeOfUse:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "tous"
+
+          isFree:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "false"
+
+          parkingSpaceNumber:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "451"
+
+          disabledParkingNumber:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example :
+
+          maxHeight:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "190"
+
+          siretNumber:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "21340172202058"
+
+          longitude:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "3.873200750000000"
+
+          latitude:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "43.611002669999998"
+
+          typology:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "centre-ville"
+
+          domaniality:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "public"
+
+          owner:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "ville de Montpellier"
+
+          usableSurfaceArea:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "9375"
+
+          levelNumber:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "5"
+
+          publicSpaces:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "438"
+
+          remainingSpaces:
+            type: object
+            properties:
+              type:
+                type: string
+                example : "Text"
+              value :
+                type : string
+                example : "0"
+
+      Deprecated Ecocounter:
+        type: object
+        deprecated: true
+        properties:
+          id:
+            type: string
+            example: 'urn:ngsi-ld:EcoCounter:XTH19101158'
+
+          type:
+            type: string
+            example: 'EcoCounter'
+
+          TimeInstant:
+            type: object
+            properties:
+              type:
+                type: string
+                example : 'DateTime'
+              value :
+                type : string
+                example : '2022-10-17T20:46:17.541Z'
+              metadata:
+                type : object
+
+          deviceType:
+            type: object
+            properties:
+              type:
+                type: string
+                example : 'Text'
+              value :
+                type : string
+                example :
+              metadata:
+                type : object
+
+          intensity:
+            type: object
+            properties:
+              type:
+                type: string
+                example : 'Integer'
+              value :
+                type : number
+                example :
+              metadata:
+                type : object
+
+          laneId:
+            type: object
+            properties:
+              type:
+                type: string
+                example : 'Integer'
+              value :
+                type : number
+                example :
+              metadata:
+                type : object
+
+          latitude:
+            type: object
+            properties:
+              type:
+                type: string
+                example : 'Double'
+              value :
+                type : number
+                example :
+              metadata:
+                type : object
+
+          longitude:
+            type: object
+            properties:
+              type:
+                type: string
+                example : 'Double'
+              value :
+                type : number
+                example :
+              metadata:
+                type : object
+
+          reversedLane:
+            type: object
+            properties:
+              type:
+                type: string
+                example : 'Text'
+              value :
+                type : string
+                example :
+              metadata:
+                type : object
+
+          vehicleType:
+            type: object
+            properties:
+              type:
+                type: string
+                example : 'Text'
+              value :
+                type : string
+                example :
+              metadata:
+                type : object
+      Deprecated EcocounterTimeseries:
+        type: object
+        deprecated: true
+        properties:
+          attrName:
+            type: string
+            example: "intensity"
+          entityId:
+            type: string
+            example: "urn:ngsi-ld:EcoCounter:XTH19101158"
+          index:
+            type: array
+            items:
+              type: string
+            example: ["2022-12-19T00:00:00.000+00:00", "2022-12-20T00:00:00.000+00:00"]
+          values:
+            type: array
+            items:
+              type: integer
+            example: [14,3]
+      Deprecated WasteContainer:
+        type: object
+        deprecated: true
+        properties:
+          id:
+            type: string
+            example: 'urn:ngsi-ld:WasteContainer:V_1052'
+
+          type:
+            type: string
+            example: 'WasteContainer'
+
+          alertLevel:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'Text'
+              value:
+                type: string
+                example: 'low'
+              metadata:
+                type: object
+
+          containerVolume:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'Text'
+              value:
+                type: string
+                example: '4'
+              metadata:
+                type: object
+
+          dateObserved:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'DateTime'
+              value:
+                type: string
+                example: '2025-08-19T15:30:04.000Z'
+              metadata:
+                type: object
+
+          fillingLevel:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'Number'
+              value:
+                type: number
+                example: 21.55555556
+              metadata:
+                type: object
+                properties:
+                  timestamp:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: 'DateTime'
+                      value:
+                        type: string
+                        example: '2025-08-19T15:30:04.000Z'
+                  unitCode:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: 'Text'
+                      value:
+                        type: string
+                        example: 'P1'
+
+          installationType:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'Text'
+              value:
+                type: string
+                example: 'Aérien'
+              metadata:
+                type: object
+
+          location:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'geo:json'
+              value:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: 'Point'
+                  coordinates:
+                    type: array
+                    items:
+                      type: number
+                      example: 0
+              metadata:
+                type: object
+
+          status:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'Text'
+              value:
+                type: string
+                example: 'active'
+              metadata:
+                type: object
+
           wasteType:
             type: object
             properties:

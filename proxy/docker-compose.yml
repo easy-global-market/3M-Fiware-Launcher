@@ -40,6 +40,8 @@ services:
       - ./swagger-ui/favicon3m.png:/usr/share/nginx/html/favicon-32x32.png:ro
       - ./swagger-ui/favicon3m.png:/usr/share/nginx/html/favicon-16x16.png:ro
       - ./swagger-ui/swagger-ui.css:/usr/share/nginx/html/swagger-ui.css:ro
+      - ./swagger-ui/3M-data-model.png:/usr/share/nginx/html/3M-data-model.png
+
     environment:
       - SWAGGER_JSON_URL=/fiware3m.yaml
       - SWAGGER_CONFIG={"syntaxHighlight.theme":"monokai"}

@@ -1,0 +1,794 @@
+openapi: 3.0.0
+info:
+  description: "Portail API permettant l'accès à certaines ressources mises à disposition par Montpellier Méditerranée Métropole. Les données sont accessibles au format standardisé Fiware."
+  version: "1.0.0"
+  title: "Open Data Montpellier Méditerranée Métropole"
+  termsOfService: "https://data.montpellier3m.fr/mentions-l%C3%A9gales"
+  contact:
+    email: "opendata3m@montpellier3m.fr"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+
+
+servers:
+  - url: http://10.150.123.49:9080/ngsi-ld/v1
+  - url: https://portail-api-data.montpellier3m.fr/ngsi-ld/v1
+
+tags:
+  - name: Disponibilité des vélos Vélomagg
+    description: Informations en temps réel sur la disponibilité des vélos dans les stations Vélomagg
+  - name: Historique des places Vélomagg
+    description: Données historiques de disponibilité des vélos Vélomagg
+  - name: Parkings
+    description: Disponibilité des places de parking en ouvrage
+  - name: Historique des places de parking en ouvrage
+    description: Données historiques de disponibilité des parkings
+  - name: Historique des comptages vélo et piéton
+    description: Données historiques des comptages vélo et piéton
+  - name: Description Eco-Compteurs
+    description: Description et localisation des éco-compteurs
+  - name: Taux de remplissage des conteneurs verre
+    description: Informations sur le taux de remplissage des conteneurs à verre
+  - name: NGSI-LD
+    description: Endpoints NGSI-LD avec capacités complètes de filtrage et de requêtes
+
+paths:
+
+components:
+    schemas: ### TODO REWORK THE NEW TYPES
+      BikeHireDockingStation:
+        type: object
+        description: NGSI-LD entity representing a bike hire docking station.
+        required:
+          - id
+          - type
+        properties:
+          id:
+            type: string
+            format: uri
+            description: Unique identifier of the entity.
+            example: "urn:ngsi-ld:station:006"
+          type:
+            type: string
+            description: NGSI-LD Entity type.
+            example: "BikeHireDockingStation"
+          address:
+            type: object
+            properties:
+              type:
+                type: string
+                example: "Property"
+              value:
+                type: object
+                properties:
+                  addressCountry:
+                    type: string
+                    example: "FR"
+                  addressLocality:
+                    type: string
+                    example: "Montpellier"
+                  streetAddress:
+                    type: string
+                    example: "Place Albert 1er - St Charles"
+          status:
+            type: object
+            properties:
+              type:
+                type: string
+                example: "Property"
+              value:
+                type: string
+                description: Operational status of the station.
+                example: "working"
+              observedAt:
+                type: string
+                format: date-time
+                example: "2026-05-05T09:48:45.000Z"
+          location:
+            type: object
+            properties:
+              type:
+                type: string
+                example: "GeoProperty"
+              value:
+                type: object
+                description: GeoJSON Point representing the location.
+                properties:
+                  type:
+                    type: string
+                    example: "Point"
+                  coordinates:
+                    type: array
+                    items:
+                      type: number
+                      format: float
+                    example: [ 3.873375, 43.616768 ]
+          freeSlotNumber:
+            type: object
+            properties:
+              type:
+                type: string
+                example: "Property"
+              value:
+                type: integer
+                example: 24
+              unitCode:
+                type: string
+                description: UN/CEFACT Common Code (e.g., C62 for no unit/count).
+                example: "C62"
+              observedAt:
+                type: string
+                format: date-time
+                example: "2026-05-05T09:48:45.000Z"
+          totalSlotNumber:
+            type: object
+            properties:
+              type:
+                type: string
+                example: "Property"
+              value:
+                type: integer
+                example: 27
+          availableBikeNumber:
+            type: object
+            properties:
+              type:
+                type: string
+                example: "Property"
+              value:
+                type: integer
+                example: 3
+              unitCode:
+                type: string
+                example: "C62"
+              observedAt:
+                type: string
+                format: date-time
+                example: "2026-05-05T09:48:45.000Z"
+      OffStreetParking:
+        type: object 
+        properties:
+            id: 
+              type: string
+              example: 'urn:ngsi-ld:parking:001'
+              
+            type: 
+              type: string
+              example: 'OffStreetParking'
+              
+            allowedVehicleType:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example :  'StructuredValue'
+                value:
+                  type : array
+                  items:
+                    type : string
+                    example : car , moped
+                metadata:
+                  type: object
+                  
+            availableSpotNumber:
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : 'Number'
+                value : 
+                  type : integer 
+                  example : 138
+                metadata:
+                  type : object
+                  properties:
+                    timestamp:
+                      type : object
+                      properties:
+                        type :
+                          type : string
+                          example : 'DateTime'
+                        value : 
+                          type : string
+                          example : '2022-10-24T11:26:59.000Z'
+
+            category:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example :  'StructuredValue'
+                value:
+                  type : array
+                  items:
+                    type : string
+                    example : feeCharged , barrierAccess , underground
+                metadata:
+                  type: object
+
+            layout:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example :  'StructuredValue'
+                value:
+                  type : array
+                  items:
+                    type : string
+                    example : multiLevel
+                metadata:
+                  type: object
+
+            location:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example :  'geo:json'
+                value:
+                  type : object
+                  properties:
+                    type:
+                      type: string
+                      example :  'Point'
+                    coordinates :
+                        type: array
+                        items: 
+                          example : 3.88881893 , 43.60871606
+                metadata:
+                  type: object
+
+            name :
+              type: object
+              properties:
+                type:
+                  type: string
+                  example :  'Text'
+                value:
+                    type : string
+                    example : 'Antigone'
+                metadata:
+                  type: object
+
+            requiredPermit :
+              type: object
+              properties:
+                type:
+                  type: string
+                  example :  'Text'
+                value:
+                    type : string
+                    example : 'noPermitNeeded'
+                metadata:
+                  type: object         
+                  
+            status:
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : 'Text'
+                value : 
+                  type : string
+                  example : 'Open'
+                metadata:
+                  type : object
+                  properties:
+                    timestamp:
+                      type : object
+                      properties:
+                        type :
+                          type : string
+                          example : 'DateTime'
+                        value : 
+                          type : string
+                          example : '2022-10-24T11:26:59.000Z'                  
+                  
+            totalSpotNumber :
+              type: object
+              properties:
+                type:
+                  type: string
+                  example :  'Number'
+                value:
+                    type : integer
+                    example : 239
+                metadata:
+                  type: object
+     
+      Ecocounter:
+        type: object 
+        properties:
+            id: 
+              type: string
+              example: 'urn:ngsi-ld:EcoCounter:XTH19101158'
+              
+            type: 
+              type: string
+              example: 'EcoCounter'
+             
+            TimeInstant:
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : 'DateTime'
+                value : 
+                  type : string
+                  example : '2022-10-17T20:46:17.541Z'
+                metadata:
+                  type : object
+                  
+            deviceType:
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : 'Text'
+                value : 
+                  type : string
+                  example : 
+                metadata:
+                  type : object
+
+            intensity:
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : 'Integer'
+                value : 
+                  type : number
+                  example :
+                metadata:
+                  type : object
+            
+            laneId:
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : 'Integer'
+                value : 
+                  type : number
+                  example : 
+                metadata:
+                  type : object
+                  
+            latitude:
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : 'Double'
+                value : 
+                  type : number
+                  example : 
+                metadata:
+                  type : object
+
+            longitude:
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : 'Double'
+                value : 
+                  type : number
+                  example : 
+                metadata:
+                  type : object
+                  
+            reversedLane:
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : 'Text'
+                value : 
+                  type : string
+                  example : 
+                metadata:
+                  type : object
+                  
+            vehicleType:
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : 'Text'
+                value : 
+                  type : string
+                  example : 
+                metadata:
+                  type : object
+          
+       
+      Parkingspace:
+        type: object 
+        properties:
+            id: 
+              type: string
+              example: 'urn:ngsi-ld:ParkingSpace:34172_ARCTRI'
+              
+            type: 
+              type: string
+              example: 'ParkingSpace'
+            
+            name:
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "Arc de Triomphe"
+              
+            insee: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "34172"
+              
+            address: 
+             type: object
+             properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "rue Foch"
+              
+            typeOfUse: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "tous"
+              
+            isFree: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "false"
+              
+            parkingSpaceNumber: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "451"
+              
+            disabledParkingNumber: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : 
+              
+            maxHeight: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "190"
+              
+            siretNumber: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "21340172202058"
+              
+            longitude: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "3.873200750000000"
+              
+            latitude: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "43.611002669999998"
+              
+            typology: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "centre-ville"
+              
+            domaniality: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "public"
+              
+            owner: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "ville de Montpellier"
+              
+            usableSurfaceArea: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "9375"
+              
+            levelNumber: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "5"
+              
+            publicSpaces: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "438"
+              
+            remainingSpaces: 
+              type: object
+              properties:
+                type: 
+                  type: string 
+                  example : "Text"
+                value : 
+                  type : string
+                  example : "0"
+       
+      EcocounterTimeseries:
+        type: object
+        properties:
+            attrName:
+                type: string
+                example: "intensity"
+            entityId:
+                type: string
+                example: "urn:ngsi-ld:EcoCounter:XTH19101158"
+            index:
+                type: array
+                items:
+                    type: string
+                example: ["2022-12-19T00:00:00.000+00:00", "2022-12-20T00:00:00.000+00:00"]
+            values:
+                type: array
+                items: 
+                    type: integer
+                example: [14,3] 
+    
+      OffStreetParkingTimeseries:
+        type: object
+        properties:
+            attrName:
+                type: string
+                example: "availableSpotNumber"
+            entityId:
+                type: string
+                example: "urn:ngsi-ld:parking:001"
+            index:
+                type: array
+                items:
+                    type: string
+                example: ["2022-12-20T00:02:55.000+00:00", "2022-12-21T00:02:55.000+00:00"]
+            values:
+                type: array
+                items: 
+                    type: integer
+                example: [161,160]
+      
+      BikestationTimeseries:
+        type: object
+        properties:
+          attrName:
+              type: string
+              example: "availableBikeNumber"
+          entityId:
+              type: string
+              example: "urn:ngsi-ld:station:001"
+          index:
+              type: array
+              items:
+                  type: string
+              example: ["2022-12-19T17:57:46.000+00:00", "2022-12-29T17:57:46.000+00:00"]
+          values:
+              type: array
+              items: 
+                  type: integer
+                  example: [12,11]
+                  
+                  
+
+      WasteContainer:
+        type: object
+        properties:
+          id: 
+            type: string
+            example: 'urn:ngsi-ld:WasteContainer:V_1052'
+            
+          type: 
+            type: string
+            example: 'WasteContainer'
+      
+          alertLevel:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'Text'
+              value:
+                type: string
+                example: 'low'
+              metadata:
+                type: object
+      
+          containerVolume:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'Text'
+              value:
+                type: string
+                example: '4'
+              metadata:
+                type: object
+      
+          dateObserved:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'DateTime'
+              value:
+                type: string
+                example: '2025-08-19T15:30:04.000Z'
+              metadata:
+                type: object
+      
+          fillingLevel:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'Number'
+              value:
+                type: number
+                example: 21.55555556
+              metadata:
+                type: object
+                properties:
+                  timestamp:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: 'DateTime'
+                      value:
+                        type: string
+                        example: '2025-08-19T15:30:04.000Z'
+                  unitCode:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: 'Text'
+                      value:
+                        type: string
+                        example: 'P1'
+      
+          installationType:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'Text'
+              value:
+                type: string
+                example: 'Aérien'
+              metadata:
+                type: object
+      
+          location:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'geo:json'
+              value:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: 'Point'
+                  coordinates:
+                    type: array
+                    items:
+                      type: number
+                      example: 0
+              metadata:
+                type: object
+      
+          status:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'Text'
+              value:
+                type: string
+                example: 'active'
+              metadata:
+                type: object
+      
+          wasteType:
+            type: object
+            properties:
+              type:
+                type: string
+                example: 'Text'
+              value:
+                type: string
+                example: 'Verre'
+              metadata:
+                type: object

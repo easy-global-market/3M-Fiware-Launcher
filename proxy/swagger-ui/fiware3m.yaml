@@ -1,6 +1,12 @@
 openapi: 3.0.0
 info:
-  description: "Portail API permettant l'accès à certaines ressources mises à disposition par Montpellier Méditerranée Métropole. Les données sont accessibles au format standardisé Fiware."
+  description: |
+    Portail API permettant l'accès à certaines ressources mises à disposition par Montpellier Méditerranée Métropole. Les données sont accessibles au format standardisé NGSI-LD (Fiware).
+    
+    <details>
+    <Summary>New data model</Summary>
+     ![new data model](/3M-data-model.png)
+    </details>
   version: "1.0.0"
   title: "Open Data Montpellier Méditerranée Métropole"
   termsOfService: "https://data.montpellier3m.fr/mentions-l%C3%A9gales"
@@ -834,7 +840,7 @@ components:
         in: query
         name: timerel
         description: |-
-          Temporal relationship for temporal queries.
+          Type of time range of the temporal query
 
           Values:
           - before
@@ -852,28 +858,26 @@ components:
         in: query
         name: timeAt
         description: |-
-          Timestamp for temporal queries (ISO 8601 format).
+          Start of the time range of the temporal query (ISO 8601 format).
 
           Used with timerel.
 
           Example: 2023-12-31T23:59:59Z
         schema:
           type: string
-          format: date-time
         required: false
 
       endTimeAtParameter:
         in: query
         name: endTimeAt
         description: |-
-          End date for temporal range queries (ISO 8601 format).
+          End of the time range of the temporal query (ISO 8601 format).
 
           Used with timerel=between.
 
           Example: 2023-12-31T23:59:59Z
         schema:
           type: string
-          format: date-time
         required: false
 
       formatParameter:
@@ -897,10 +901,11 @@ components:
         description: |-
           Comma-separated list of aggregation methods. 
           Only applicable when format=aggregatedValues.
+          
+          Example: max,avg,min,sum,distinctCount,totalCount
         schema:
           type: string
-          # Common NGSI-LD aggregation methods
-          example: max,avg
+          default: null
         required: false
 
       aggrPeriodDurationParameter:
@@ -909,9 +914,11 @@ components:
         description: |-
           ISO 8601 duration for the aggregation period.
           Only applicable when format=aggregatedValues.
+          
+          Example: P1D (1 day)
         schema:
           type: string
-          example: P1D
+          default: null
         required: false
 
     schemas: ### TODO REWORK THE NEW TYPES
